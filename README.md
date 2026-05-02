@@ -1,6 +1,6 @@
 # Google Drive 圖片連結提取器 & 專業互動相簿產生器 (V7)
 
-這是一個由 **阿剛老師與 AI 協作開發** 的現代化網頁工具[cite: 1]。它能穩定地從 Google 雲端硬碟資料夾中提取圖片直接連結，並具備一鍵生成「專業互動相簿」的強大功能。
+這是一個由 **阿剛老師與 AI 協作開發** 的現代化網頁工具[cite: 1]。它能穩定地從 Google 雲端硬碟資料夾中提取圖片直接連結，並具備一鍵生成「專業互動相簿」的強大功能[cite: 1, 2]。
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### 最新 V7 版改進重點：
 *   **專業相簿引擎**：整合 `photo.js`，支援自動播放、縮圖列導航與多種 3D 轉場效果[cite: 1]。
-*   **穩定嵌入連結**：提取 `thumbnail` 格式連結，確保在任何網頁的 `<img>` 標籤中都能穩定顯示[cite: 2]。
+*   **穩定嵌入連結**：提取 `thumbnail` 格式連結，確保在網頁的 `<img>` 標籤中都能穩定顯示[cite: 2]。
 *   **持久化設置**：系統會自動將 GAS 網址儲存於瀏覽器的本地空間（Local Storage），下次開啟無需重新輸入[cite: 2]。
 
 ---
@@ -20,7 +20,6 @@
 ## ✨ 核心功能
 
 *   **現代化 UI 介面**：使用 React 與 Tailwind CSS 打造的毛玻璃設計（Glassmorphism）[cite: 2]。
-*   **GAS 穩定抓取**：透過自建 GAS 腳本，避開複雜的 API Key 申請流程[cite: 1]。
 *   **一鍵生成相簿**：提取圖片後，可直接下載一個獨立的 `slideshow_final.html` 專業相簿檔案[cite: 1]。
 *   **智慧操作**：支援鍵盤左右方向鍵切換圖片、全螢幕模式、以及可收合的設定工具列[cite: 1]。
 
@@ -30,18 +29,54 @@
 
 ### 第一步：部署 GAS 腳本 (後端橋接)
 1.  開啟 [Google Apps Script 官網](https://script.google.com/) 並點擊「新專案」。
-2.  貼上 `Google Drive 圖片連結提取器.html`[cite: 2] 或本專案提供的 GAS 腳本代碼。
+2.  **複製並貼上以下代碼**：
+
+```javascript
+/**
+ * Google Drive 圖片提取後端腳本
+ * 功能：讀取指定資料夾 ID 內的所有圖片檔案並回傳 JSON 格式
+ */
+function doGet(e) {
+  const folderId = e.parameter.folderId;
+  try {
+    const folder = DriveApp.getFolderById(folderId);
+    const files = folder.getFiles();
+    const results = [];
+    
+    while (files.hasNext()) {
+      const file = files.next();
+      const mime = file.getMimeType();
+      // 僅提取圖片類型檔案
+      if (mime.includes('image/')) {
+        results.push({ 
+          id: file.getId(), 
+          name: file.getName(), 
+          mimeType: mime 
+        });
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({status: 'success', files: results}))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+```
+
 3.  點擊「部署」>「新部署」。類型選「網頁應用程式」，**「誰有權存取」務必選「所有人 (Anyone)」**。
 4.  複製產生的「網頁應用程式網址」。
 
 ### 第二步：設定工具
-1.  將 `Google Drive 圖片連結提取器.html`[cite: 2] 與 `photo.js`[cite: 1] 放在**同一個資料夾**內。
-2.  開啟 HTML 檔案，點擊右上角的 **⚙️ 設定**，貼上您步驟一複製的網址。
+1.  下載本專案的 `Google Drive 圖片連結提取器.html`[cite: 2] 與 `photo.js`[cite: 1]。
+2.  **務必將兩者放在同一個資料夾**。
+3.  開啟 HTML 檔案，點擊右上角的 **⚙️ 設定**，貼上步驟一複製的網址。
 
-### 第三步：抓取圖片與產生相簿
-1.  貼上 Google Drive **資料夾共用連結**（需設定為「知道連結的使用者皆可檢視」）[cite: 2]。
-2.  點擊「立即抓取圖片」。
-3.  提取成功後，點擊 **「建立相簿」** 按鈕，系統將自動產生並下載 `slideshow_final.html`[cite: 1]。
+### 第三步：抓取與生成
+1.  貼上 Google Drive **資料夾連結**[cite: 2]。
+2.  提取成功後，點擊 **「建立相簿」** 即可獲得專業電子相簿[cite: 1]。
 
 ---
 
